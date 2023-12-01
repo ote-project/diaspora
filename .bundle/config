@@ -1,2 +1,4 @@
 ---
 BUNDLE_SSL_VERIFY_MODE: "0"
+BUNDLE_JOBS: "5"
+BUNDLE_WITH: "mysql"

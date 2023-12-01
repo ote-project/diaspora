@@ -159,3 +159,52 @@ shared_context suppress_csrf_verification: :none do
     ActionController::Base.allow_forgery_protection = true
   end
 end
+
+def swap_in_params(sym_params)
+	sym_params = sym_params.transform_values(&:to_s).freeze  # Convert values to strings, since params are strings.
+
+	klass = ActionController::Parameters
+	klass.alias_method :orig_hash_access, :[]
+	klass.define_method :[] do |key|
+		sym_params.fetch(key) { |k| orig_hash_access k }
+	end
+
+	yield
+ensure
+	klass.undef_method :[]
+	klass.alias_method :[], :orig_hash_access
+	klass.undef_method :orig_hash_access
+end
+
+# Makes the user object's ID field return a symbolic variable.
+# Call this function on the user currently logged in.
+def make_user_id_symbolic(user, id_var_name)
+  user.define_singleton_method(:id) do
+    res = super()
+    raise "User ID is not an integer" unless res.is_a?(Integer)
+    res.to_symbolic_var(id_var_name)
+  end
+end
+
+def make_dse_recorder
+  dr = Dse::Recorder.new
+  dr.model ActiveModel::Type::Integer, :deserialize, "RAILS_DESERIALIZE_INTEGER"
+  dr.model ActiveModel::Type::Integer, :serialize, "RAILS_SERIALIZE_INTEGER"
+
+  dr.model ActiveRecord::Type::Text, :deserialize, "RAILS_DESERIALIZE_STRING"
+  dr.model ActiveRecord::Type::Text, :serialize, "RAILS_SERIALIZE_STRING"
+
+  dr.model ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter::MysqlString, :deserialize,
+           "RAILS_DESERIALIZE_STRING"
+  dr.model ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter::MysqlString, :serialize,
+           "RAILS_SERIALIZE_STRING"
+
+  dr
+end
+
+def suppress_and_print(*exception_classes)
+  yield
+rescue *exception_classes => e
+  puts "Ignored Exception: #{e.class}: #{e.message}"
+end
+

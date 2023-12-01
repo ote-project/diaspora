@@ -21,7 +21,7 @@ gem "diaspora_federation-rails", "0.2.6"
 # API and JSON
 
 gem "acts_as_api", "1.0.1"
-gem "json",        "2.3.0"
+gem "json",        "2.5.1"
 gem "json-schema", "2.8.1"
 
 # Authentication
@@ -67,14 +67,15 @@ gem "sprockets-rails",        "3.2.1"
 
 # Database
 
-group :mysql, optional: true do
-  gem "mysql2", "0.5.3"
-end
-group :postgresql, optional: true do
-  gem "pg",     "1.2.3"
-end
+# group :mysql, optional: true do
+#   gem "mysql2", "0.5.3"
+# end
+# group :postgresql, optional: true do
+#   gem "pg",     "1.2.3"
+# end
 
-git 'https://github.com/blockaid-project/activerecord-jdbc-adapter.git', branch: '52-stable-blockaid' do
+git 'git@github.com:zhangwen0411/activerecord-jdbc-adapter.git', branch: 'dse-52-stable' do
+# gem 'activerecord-jdbcmysql-adapter', :platform => :jruby, :path => "/home/ubuntu/dse/activerecord-jdbc-adapter"
   gem 'activerecord-jdbcmysql-adapter', :platform => :jruby
 end
 
@@ -290,6 +291,7 @@ group :test do
 
   gem "capybara",           "3.15.0"
   gem "database_cleaner",   "1.8.3"
+  gem "database_cleaner-active_record"
   gem "poltergeist",        "1.18.1"
 
   gem "cucumber-api-steps", "0.14", require: false
