@@ -12,14 +12,31 @@ describe PostsController, type: :controller do
     context "user signed in" do
       context "given a post that the user is allowed to see" do
         before do
+          make_user_id_symbolic(alice, "user_id")
           sign_in alice, scope: :user
+        end
+
+        it "_succeeds" do
+          expect_any_instance_of(PostService).to receive(:mark_user_notifications).with(post.id)
+
+          get :show, params: {id: post.id}
+          expect(response).to be_successful
         end
 
         it "succeeds" do
           expect_any_instance_of(PostService).to receive(:mark_user_notifications).with(post.id)
 
-          get :show, params: {id: post.id}
+          post_id = post.id
+          sym_params = {id: post_id.to_symbolic_var("post_id")}.freeze
+          ActiveRecord::Base.connection.query_cache.clear
+          dr = Dse::Recorder.new
+          swap_in_symbolic_params(sym_params) do
+            dr.start do
+              get :show, params: {id: post.id}
+            end
+          end
           expect(response).to be_successful
+          Dse::write_transcript(dr)
         end
 
         it "succeeds after removing a mention when closing the mentioned user's account" do
@@ -67,9 +84,18 @@ describe PostsController, type: :controller do
         let(:public) { alice.post(:status_message, text: "hello", public: true) }
         let(:public_with_tags) { alice.post(:status_message, text: "#hi #howareyou", public: true) }
 
-        it "shows a public post" do
+        it "_shows a public post" do
           get :show, params: {id: public.id}
           expect(response.body).to match "hello"
+        end
+
+        it "shows a public post" do
+          dr = Dse::Recorder.new
+          dr.start do
+            get :show, params: {id: public.id}
+          end
+          expect(response.body).to match "hello"
+          Dse::write_transcript(dr)
         end
 
         it "succeeds for statusnet" do

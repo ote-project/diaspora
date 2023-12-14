@@ -43,6 +43,7 @@ production_mod_checked:
 test:
   <<: *combined
   database: diaspora_test
+  url: jdbc:mysql://localhost:3306/diaspora_test?allowPublicKeyRetrieval=true&useSSL=false
 integration1:
   <<: *combined
   database: diaspora_integration1

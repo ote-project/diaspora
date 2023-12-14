@@ -199,6 +199,12 @@ def make_dse_recorder
   dr.model ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter::MysqlString, :serialize,
            "RAILS_SERIALIZE_STRING"
 
+  dr.model ActiveRecord::AttributeMethods::TimeZoneConversion::TimeZoneConverter, :deserialize,
+            "RAILS_DESERIALIZE_TIME"
+
+  dr.model ActiveRecord::AttributeMethods::TimeZoneConversion::TimeZoneConverter, :serialize,
+           "RAILS_SERIALIZE_TIME"
+
   dr
 end
 
