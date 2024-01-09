@@ -22,6 +22,8 @@ describe PostsController, type: :controller do
     end
 
     def run_test
+      DatabaseCleaner.clean_with(:truncation)  # Clear the database.
+
       conn = ActiveRecord::Base.connection
       conn.begin_transaction joinable: false
 
@@ -36,32 +38,30 @@ describe PostsController, type: :controller do
       conn.rollback_transaction if conn.transaction_open?
     end
 
-    it "runs" do
-      DatabaseCleaner.clean_with(:truncation)  # Clear the database.
-
-      # FIXME(zhangwen): de-duplicate this.
-      while Dse::start_new_invocation do
-        run_test do
-          suppress_and_print(ActiveRecord::RecordNotFound, ActiveRecord::SerializationTypeMismatch) do
-            sign_in_symbolic_user
-            get :show, params: {id: Dse::get_input_int("post_id")}
-          end
+    # FIXME(zhangwen): de-duplicate this.
+    it "_runs" do # Dry run.
+      run_test do
+        suppress_and_print(ActiveRecord::RecordNotFound, ActiveRecord::SerializationTypeMismatch) do
+          sign_in_symbolic_user
+          get :show, params: {id: Dse::get_input_int("post_id")}
         end
+      end
+    end
 
-        run_test do
-          sym_params = {id: Dse::get_input_int("post_id")}.freeze
-          ActiveRecord::Base.connection.query_cache.clear
-          dr = make_dse_recorder
-          swap_in_params(sym_params) do
-            dr.start do
-              suppress_and_print(ActiveRecord::RecordNotFound, ActiveRecord::SerializationTypeMismatch) do
-                sign_in_symbolic_user
-                get :show, params: sym_params
-              end
+    it "runs" do
+      run_test do
+        sym_params = {id: Dse::get_input_int("post_id")}.freeze
+        ActiveRecord::Base.connection.query_cache.clear
+        dr = make_dse_recorder
+        swap_in_params(sym_params) do
+          dr.start do
+            suppress_and_print(ActiveRecord::RecordNotFound, ActiveRecord::SerializationTypeMismatch) do
+              sign_in_symbolic_user
+              get :show, params: sym_params
             end
           end
-          Dse::write_transcript(dr)
         end
+        Dse::write_transcript(dr)
       end
     end
   end

@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+require 'bundler/setup'
+require 'rspec/core'
+
+# Adapted from RSpec codebase.
+module RSpec
+  module Core
+    class Runner
+      def run_while(err, out)
+        setup(err, out)
+        return @configuration.reporter.exit_early(@configuration.failure_exit_code) if RSpec.world.wants_to_quit
+
+        status = 0
+        while yield(status)
+          status = run_specs(@world.ordered_example_groups).tap do
+            persist_example_statuses
+          end
+        end
+
+        status
+      end
+    end
+  end
+end
+
+options = RSpec::Core::ConfigurationOptions.new(ARGV)
+runner = RSpec::Core::Runner.new(options)
+status = runner.run_while($stderr, $stdout) do |status|
+  status == 0 && Dse::start_new_invocation
+end.to_i
+exit(status) if status != 0
