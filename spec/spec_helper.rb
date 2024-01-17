@@ -191,6 +191,9 @@ def make_dse_recorder
   dr.model ActiveModel::Type::Integer, :deserialize, "RAILS_DESERIALIZE_INTEGER"
   dr.model ActiveModel::Type::Integer, :serialize, "RAILS_SERIALIZE_INTEGER"
 
+  dr.model ActiveModel::Type::Boolean, :deserialize, "RAILS_DESERIALIZE_BOOLEAN"
+  dr.model ActiveModel::Type::Boolean, :serialize, "RAILS_SERIALIZE_BOOLEAN"
+
   dr.model ActiveRecord::Type::Text, :deserialize, "RAILS_DESERIALIZE_STRING"
   dr.model ActiveRecord::Type::Text, :serialize, "RAILS_SERIALIZE_STRING"
 

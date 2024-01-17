@@ -14,6 +14,7 @@ end
 
 describe PostsController, type: :controller do
   self.use_transactional_tests = false
+  self.fixture_table_names = []  # Don't load fixtures.
 
   describe "#show" do
     def sign_in_symbolic_user
@@ -22,7 +23,9 @@ describe PostsController, type: :controller do
     end
 
     def run_test
-      DatabaseCleaner.clean_with(:truncation)  # Clear the database.
+      if Dse::invocation_id == 0
+        DatabaseCleaner.clean_with(:truncation)  # Clear the database before the first run.
+      end
 
       conn = ActiveRecord::Base.connection
       conn.begin_transaction joinable: false
