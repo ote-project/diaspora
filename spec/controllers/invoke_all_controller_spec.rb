@@ -41,16 +41,6 @@ describe PostsController, type: :controller do
       conn.rollback_transaction if conn.transaction_open?
     end
 
-    # FIXME(zhangwen): de-duplicate this.
-    it "_runs" do # Dry run.
-      run_test do
-        suppress_and_print(ActiveRecord::RecordNotFound, ActiveRecord::SerializationTypeMismatch) do
-          sign_in_symbolic_user
-          get :show, params: {id: Dse::get_input_int("post_id")}
-        end
-      end
-    end
-
     it "runs" do
       run_test do
         sym_params = {id: Dse::get_input_int("post_id")}.freeze

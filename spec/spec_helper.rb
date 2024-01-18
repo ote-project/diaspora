@@ -188,6 +188,8 @@ end
 
 def make_dse_recorder
   dr = Dse::Recorder.new
+  dr.ignore_sql_matching(/^(?i)SELECT\s+[A-Za-z0-9_]+\s+FROM\s+information_schema/)
+
   dr.model ActiveModel::Type::Integer, :deserialize, "RAILS_DESERIALIZE_INTEGER"
   dr.model ActiveModel::Type::Integer, :serialize, "RAILS_SERIALIZE_INTEGER"
 
