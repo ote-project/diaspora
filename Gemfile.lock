@@ -1,6 +1,6 @@
 GIT
   remote: git@github.com:zhangwen0411/activerecord-jdbc-adapter.git
-  revision: 17ee8a0524458e69328d391ebb45627f5c2875aa
+  revision: 5e0ea748689edc756d0e2a1e5d5a605b33a3b75d
   branch: dse-52-stable
   specs:
     activerecord-jdbc-adapter (52.8-java)
@@ -130,7 +130,7 @@ GEM
       compass (~> 1.0.0)
       sass-rails (< 5.1)
       sprockets (< 4.0)
-    concurrent-ruby (1.2.2)
+    concurrent-ruby (1.2.3)
     configurate (0.3.1)
     connection_pool (2.2.3)
     coveralls (0.8.23)
@@ -395,7 +395,7 @@ GEM
     mini_magick (4.10.1)
     mini_mime (1.1.0)
     mini_portile2 (2.4.0)
-    minitest (5.20.0)
+    minitest (5.21.2)
     mobile-fu (1.4.0)
       rack-mobile-detect
       rails
