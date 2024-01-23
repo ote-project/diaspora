@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 require 'database_cleaner/active_record'
 
-ActiveRecord::Base.logger = Logger.new(STDOUT)
-ActiveRecord::Base.logger.level = Logger::DEBUG
+# ActiveRecord::Base.logger = Logger.new(STDOUT)
+# ActiveRecord::Base.logger.level = Logger::DEBUG
 
 module ActiveSupport
   class TimeWithZone
