@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$DIR/.."
+
+mysqld &
+sleep 2
+mysql <<EOF
+  CREATE DATABASE diaspora_test;
+  CREATE USER 'diaspora'@'localhost' IDENTIFIED BY '12345678';
+  GRANT ALL PRIVILEGES ON \`diaspora_%\`.* TO 'diaspora'@'localhost';
+EOF
+
+RAILS_ENV=test bin/bundle exec rake db:migrate
+
