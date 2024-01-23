@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 require 'database_cleaner/active_record'
 
+ActiveRecord::Base.logger = Logger.new(STDOUT)
+ActiveRecord::Base.logger.level = Logger::DEBUG
+
 module ActiveSupport
   class TimeWithZone
     def with_sym_ast(ast)
@@ -44,13 +47,15 @@ describe PostsController, type: :controller do
     it "runs" do
       run_test do
         sym_params = {id: Dse::get_input_int("post_id")}.freeze
-        ActiveRecord::Base.connection.query_cache.clear
+        ActiveRecord::Base.connection.query_cache.clear  # TODO(zhangwen): I don't think I need this?
         dr = make_dse_recorder
         swap_in_params(sym_params) do
           dr.start do
             suppress_and_print(ActiveRecord::RecordNotFound, ActiveRecord::SerializationTypeMismatch) do
-              sign_in_symbolic_user
-              get :show, params: sym_params
+              ActiveRecord::Base.connection.cache do  # Turn on query caching.
+                sign_in_symbolic_user
+                get :show, params: sym_params
+              end
             end
           end
         end
