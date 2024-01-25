@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -em
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR/.."
@@ -7,5 +7,10 @@ cd "$DIR/.."
 mysqld &
 sleep 2
 
-exec bin/rspec_dse "$@"
+bin/rspec_dse $@ &
+while [ ! -e "$DSE_TUNNEL_PATH" ]; do sleep 0.5; done
+chmod 777 "$DSE_TUNNEL_PATH"
+echo "Set permission on: $DSE_TUNNEL_PATH"
+
+fg
 
