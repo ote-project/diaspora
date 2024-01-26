@@ -5,7 +5,10 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR/.."
 
 mysqld &
-sleep 2
+while ! mysqladmin ping --silent; do
+  sleep 1
+done
+
 
 bin/rspec_dse $@ &
 while [ ! -e "$DSE_TUNNEL_PATH" ]; do sleep 0.5; done
