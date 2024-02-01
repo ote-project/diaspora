@@ -22,7 +22,8 @@ class LikeService
 
   def find_for_post(post_id)
     likes = post_service.find!(post_id).likes
-    user ? likes.order(Arel.sql("author_id = #{user.person.id} DESC")) : likes
+    # user ? likes.order(Arel.sql("author_id = #{user.person.id} DESC")) : likes
+    likes
   end
 
   private
