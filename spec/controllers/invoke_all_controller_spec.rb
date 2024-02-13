@@ -52,10 +52,8 @@ describe PostsController, type: :controller do
         swap_in_params(sym_params) do
           dr.start do
             suppress_and_print(ActiveRecord::RecordNotFound, ActiveRecord::SerializationTypeMismatch) do
-              ActiveRecord::Base.connection.cache do  # Turn on query caching.
-                sign_in_symbolic_user
-                get :show, params: sym_params
-              end
+              sign_in_symbolic_user
+              get :show, params: sym_params
             end
           end
         end
