@@ -161,19 +161,23 @@ shared_context suppress_csrf_verification: :none do
 end
 
 def swap_in_params(sym_params)
-	sym_params = sym_params.transform_values(&:to_s).freeze  # Convert values to strings, since params are strings.
+  sym_params = sym_params.transform_values(&:to_s).freeze  # Convert values to strings, since params are strings.
 
-	klass = ActionController::Parameters
-	klass.alias_method :orig_hash_access, :[]
-	klass.define_method :[] do |key|
-		sym_params.fetch(key) { |k| orig_hash_access k }
-	end
+  klass = ActionController::Parameters
+  klass.class_eval do
+    # Avoid alias_method because it adds a layer of indirection when the alias is invoked.
+    define_method :orig_hash_access, instance_method(:[])
+    define_method :[] do |key|
+      sym_params.fetch(key) { |k| orig_hash_access k }
+    end
+  end
 
-	yield
+  yield
 ensure
-	klass.undef_method :[]
-	klass.alias_method :[], :orig_hash_access
-	klass.undef_method :orig_hash_access
+  klass.class_eval do
+    define_method :[], instance_method(:orig_hash_access)
+    undef_method :orig_hash_access
+  end
 end
 
 # Makes the user object's ID field return a symbolic variable.
