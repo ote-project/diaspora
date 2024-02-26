@@ -214,6 +214,12 @@ def make_dse_recorder
   dr.model ActiveRecord::AttributeMethods::TimeZoneConversion::TimeZoneConverter, :serialize,
            "RAILS_SERIALIZE_TIME"
 
+  # `RAILS_CAST_SUM` returns the value if it is non-nil, and returns 0 otherwise.
+  dr.model ActiveRecord::Calculations, :type_cast_calculated_value, "RAILS_CAST_SUM",
+           filter: -> (_value, type, operation = nil) {
+             operation == "sum" && type.instance_of?(ActiveModel::Type::Integer)
+           }
+
   dr
 end
 
