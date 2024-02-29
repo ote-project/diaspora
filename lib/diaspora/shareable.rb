@@ -81,7 +81,9 @@ module Diaspora
       end
 
       def by_max_time(max_time, order="created_at")
-        where("#{table_name}.#{order} < ?", max_time).order("#{table_name}.#{order} DESC")
+        where(arel_table[order].lt(
+          predicate_builder.build_bind_attribute(order, max_time)
+        )).order("#{table_name}.#{order} DESC")
       end
 
       def owned_by_user(user)
