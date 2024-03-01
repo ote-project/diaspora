@@ -15,39 +15,42 @@ module ActiveSupport
   end
 end
 
+class << Time
+  alias_method :orig_now, :now
+  def now
+    Dse.get_cached_var(:now) { orig_now }
+  end
+end
+
 describe PostsController, type: :controller do
-  self.use_transactional_tests = false
-  self.fixture_table_names = []  # Don't load fixtures.
+  include DseHelpers
 
   describe "#show" do
-    def sign_in_symbolic_user
-      user_id = Dse::get_input_int("user_id")
-      sign_in User.find(user_id), scope: :user
-    end
-
-    def run_test
-      if Dse::invocation_id == 0
-        DatabaseCleaner.clean_with(:truncation)  # Clear the database before the first run.
-      end
-
-      conn = ActiveRecord::Base.connection
-      conn.begin_transaction joinable: false
-
-      conn.disable_referential_integrity do
-        Dse::get_db_setup_stmts.each do |sql|
-          conn.execute(sql)
-        end
-      end
-
-      yield
-    ensure
-      conn.rollback_transaction if conn.transaction_open?
-    end
-
     it "runs" do
       run_test do
         sym_params = {id: Dse::get_input_int("post_id")}.freeze
-        ActiveRecord::Base.connection.query_cache.clear  # TODO(zhangwen): I don't think I need this?
+        dr = make_dse_recorder
+        swap_in_params(sym_params) do
+          dr.start do
+            suppress_and_print(ActiveRecord::RecordNotFound, ActiveRecord::SerializationTypeMismatch) do
+              sign_in_symbolic_user
+              get :show, params: sym_params
+            end
+          end
+        end
+        Dse::write_transcript(dr)
+      end
+    end
+  end
+end
+
+describe PeopleController, type: :controller do
+  include DseHelpers
+
+  describe "#show" do
+    it "runs" do
+      run_test do
+        sym_params = {id: Dse::get_input_str("person_guid")}.freeze
         dr = make_dse_recorder
         swap_in_params(sym_params) do
           dr.start do
