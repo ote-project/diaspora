@@ -1,4 +1,4 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env -S ruby -Xconsistent.hashing=true
 require 'bundler/setup'
 require 'rspec/core'
 
