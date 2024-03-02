@@ -7,10 +7,7 @@ require 'database_cleaner/active_record'
 module ActiveSupport
   class TimeWithZone
     def with_sym_ast(ast)
-      # TODO(zhangwen): deduplicate this.
-      symbolic_copy = dup
-      symbolic_copy.define_singleton_method(:sym_ast) { ast }
-      symbolic_copy
+      dup.set_sym_ast ast
     end
   end
 end
