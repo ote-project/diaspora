@@ -168,12 +168,7 @@ module DseHelpers
     end
   end
 
-  def sign_in_symbolic_user
-    user_id = Dse::get_input_int("user_id")
-    sign_in User.find(user_id), scope: :user
-  end
-
-  def run_test
+  def run_test(action, sym_params, get_kwargs = {})
     if Dse::invocation_id == 0
       DatabaseCleaner.clean_with(:truncation)  # Clear the database before the first run.
     end
@@ -187,7 +182,20 @@ module DseHelpers
       end
     end
 
-    yield
+    dr = make_dse_recorder
+    swap_in_params(sym_params) do
+      dr.start do
+        suppress_and_print(ActiveRecord::RecordNotFound, ActiveRecord::SerializationTypeMismatch) do
+          # Sign in symbolic user.
+          user_id = Dse::get_input_int("user_id")
+          sign_in User.find(user_id), scope: :user
+
+          get_kwargs[:params] = sym_params
+          get action, **get_kwargs
+        end
+      end
+    end
+    Dse::write_transcript(dr)
   ensure
     conn.rollback_transaction if conn.transaction_open?
   end

@@ -24,19 +24,8 @@ describe PostsController, type: :controller do
 
   describe "#show" do
     it "runs" do
-      run_test do
-        sym_params = {id: Dse::get_input_int("post_id")}.freeze
-        dr = make_dse_recorder
-        swap_in_params(sym_params) do
-          dr.start do
-            suppress_and_print(ActiveRecord::RecordNotFound, ActiveRecord::SerializationTypeMismatch) do
-              sign_in_symbolic_user
-              get :show, params: sym_params
-            end
-          end
-        end
-        Dse::write_transcript(dr)
-      end
+      sym_params = {id: Dse::get_input_int("post_id")}.freeze
+      run_test :show, sym_params
     end
   end
 end
@@ -46,19 +35,26 @@ describe PeopleController, type: :controller do
 
   describe "#show" do
     it "runs" do
-      run_test do
-        sym_params = {id: Dse::get_input_str("person_guid")}.freeze
-        dr = make_dse_recorder
-        swap_in_params(sym_params) do
-          dr.start do
-            suppress_and_print(ActiveRecord::RecordNotFound, ActiveRecord::SerializationTypeMismatch) do
-              sign_in_symbolic_user
-              get :show, params: sym_params
-            end
-          end
-        end
-        Dse::write_transcript(dr)
-      end
+      sym_params = {id: Dse::get_input_str("person_guid")}.freeze
+      run_test :show, sym_params
+    end
+  end
+
+  describe "#stream" do
+    it "runs" do
+      sym_params = {person_id: Dse::get_input_str("person_guid")}.freeze
+      run_test :stream, sym_params, :format => :json
+    end
+  end
+end
+
+describe CommentsController, type: :controller do
+  include DseHelpers
+
+  describe "#index" do
+    it "runs" do
+      sym_params = {post_id: Dse::get_input_int("post_id")}.freeze
+      run_test :index, sym_params, :format => :json
     end
   end
 end
