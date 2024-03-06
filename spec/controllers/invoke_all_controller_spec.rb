@@ -58,3 +58,14 @@ describe CommentsController, type: :controller do
     end
   end
 end
+
+describe ConversationsController, type: :controller do
+  include DseHelpers
+
+  describe "#index" do
+    it "runs" do
+      sym_params = {conversation_id: Dse::get_input_int("conversation_id")}.freeze
+      run_test :index, sym_params
+    end
+  end
+end
