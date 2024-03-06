@@ -7,9 +7,10 @@ cd "$DIR/.."
 mysqld &
 sleep 2
 mysql <<EOF
-  CREATE DATABASE diaspora_test;
+  CREATE DATABASE `diaspora_test`;
   CREATE USER 'diaspora'@'localhost' IDENTIFIED BY '12345678';
   GRANT ALL PRIVILEGES ON \`diaspora_%\`.* TO 'diaspora'@'localhost';
+  ALTER DATABASE `diaspora_test` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_cs;
 EOF
 
 RAILS_ENV=test bin/bundle exec rake db:migrate
