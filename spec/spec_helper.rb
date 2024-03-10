@@ -243,6 +243,9 @@ module DseHelpers
     dr.model ActiveRecord::Type::Text, :deserialize, "RAILS_DESERIALIZE_STRING"
     dr.model ActiveRecord::Type::Text, :serialize, "RAILS_SERIALIZE_STRING"
 
+    dr.model ActiveRecord::Type::Date, :deserialize, "RAILS_DESERIALIZE_DATE"
+    dr.model ActiveRecord::Type::Date, :serialize, "RAILS_SERIALIZE_DATE"
+
     dr.model ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter::MysqlString, :deserialize,
              "RAILS_DESERIALIZE_STRING"
     dr.model ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter::MysqlString, :serialize,
@@ -250,7 +253,6 @@ module DseHelpers
 
     dr.model ActiveRecord::AttributeMethods::TimeZoneConversion::TimeZoneConverter, :deserialize,
               "RAILS_DESERIALIZE_TIME"
-
     dr.model ActiveRecord::AttributeMethods::TimeZoneConversion::TimeZoneConverter, :serialize,
              "RAILS_SERIALIZE_TIME"
 
