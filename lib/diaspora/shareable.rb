@@ -64,7 +64,7 @@ module Diaspora
       def owned_or_visible_by_user(user)
         with_visibility.where(
           visible_by_user(user).or(arel_table[:public].eq(true)
-                                     .or(arel_table[:author_id].eq(user.person_id)))
+                                     .or(arel_table[:author_id].eq(predicate_builder.build_bind_attribute(:author_id, user.person_id))))
         ).select("DISTINCT #{table_name}.*")
       end
 
@@ -93,7 +93,7 @@ module Diaspora
       private
 
       def visible_by_user(user)
-        ShareVisibility.arel_table[:user_id].eq(user.id)
+        ShareVisibility.arel_table[:user_id].eq(predicate_builder.build_bind_attribute(:user_id, user.id))
       end
     end
   end
