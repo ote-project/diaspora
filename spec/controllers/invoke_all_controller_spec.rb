@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'jruby/dse/extensions/equality'
 require 'database_cleaner/active_record'
 
 # ActiveRecord::Base.logger = Logger.new(STDOUT)
@@ -6,6 +7,8 @@ require 'database_cleaner/active_record'
 
 module ActiveSupport
   class TimeWithZone
+    include Dse::SymbolicEquality
+
     def with_sym_ast(ast)
       dup.set_sym_ast ast
     end
