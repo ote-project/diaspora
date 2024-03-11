@@ -58,9 +58,8 @@ module ActiveRecord
 end
 
 class << Time
-  alias_method :orig_now, :now
   def now
-    Dse.get_cached_var(:now) { orig_now }
+    Dse::get_input_ts("now")
   end
 end
 
