@@ -6,6 +6,7 @@ require 'database_cleaner/active_record'
 # ActiveRecord::Base.logger = Logger.new(STDOUT)
 # ActiveRecord::Base.logger.level = Logger::DEBUG
 
+#region Redefinitions of Ruby on Rails methods
 # FIXME(zhangwen): put these somewhere else?
 module ActiveSupport
   class TimeWithZone
@@ -55,7 +56,38 @@ module ActiveRecord
       end
     end
   end
+  module Inheritance
+    module ClassMethods
+      private
+        def find_sti_class(type_name)
+          type_name = base_class.type_for_attribute(inheritance_column).cast(type_name)
+
+          descendants.sort_by(&:name).each do |klass| # TODO(zhangwen): is `sort_by` necessary?
+            return klass if klass.name == type_name
+          end
+
+          subclass = begin
+            if store_full_sti_class
+              ActiveSupport::Dependencies.constantize(type_name)
+            else
+              compute_type(type_name)
+            end
+          rescue NameError
+            raise SubclassNotFound,
+              "The single-table inheritance mechanism failed to locate the subclass: '#{type_name}'. " \
+              "This error is raised because the column '#{inheritance_column}' is reserved for storing the class in case of inheritance. " \
+              "Please rename this column if you didn't intend it to be used for storing the inheritance class " \
+              "or overwrite #{name}.inheritance_column to use another column for that information."
+          end
+          unless subclass == self || descendants.include?(subclass)
+            raise SubclassNotFound, "Invalid single-table inheritance type: #{subclass.name} is not a subclass of #{name}"
+          end
+          subclass
+        end
+    end
+  end
 end
+#endregion
 
 class << Time
   def now
@@ -113,3 +145,15 @@ describe ConversationsController, type: :controller do
     end
   end
 end
+
+describe NotificationsController, type: :controller do
+  include DseHelpers
+
+  describe "#index" do
+    it "runs" do
+      sym_params = {page: 1, per_page: 100}.freeze
+      run_test :index, sym_params
+    end
+  end
+end
+#endregion
