@@ -8,83 +8,85 @@ require 'database_cleaner/active_record'
 
 #region Redefinitions of Ruby on Rails methods
 # FIXME(zhangwen): put these somewhere else?
-module ActiveSupport
-  class TimeWithZone
-    include Dse::SymbolicEquality
+class ActiveSupport::TimeWithZone
+  include Dse::SymbolicEquality
 
-    def with_sym_ast(ast)
-      dup.set_sym_ast ast
-    end
+  def with_sym_ast(ast)
+    dup.set_sym_ast ast
   end
 end
 
 module ActiveRecord
-  module AttributeMethods
-    module Query
-      def query_attribute(attr_name)
-        value = self[attr_name]
-        res = Dse::Recorder.ignore do
-          case value
-          when true        then true
-          when false, nil  then false
-          else
-            column = self.class.columns_hash[attr_name]
-            if column.nil?
-              if Numeric === value || value !~ /[^0-9]/
-                !value.to_i.zero?
-              else
-                return false if ActiveModel::Type::Boolean::FALSE_VALUES.include?(value)
-                !value.blank?
-              end
-            elsif value.respond_to?(:zero?)
-              !value.zero?
+  module AttributeMethods::Query
+    def query_attribute(attr_name)
+      value = self[attr_name]
+      res = Dse::Recorder.ignore do
+        case value
+        when true        then true
+        when false, nil  then false
+        else
+          column = self.class.columns_hash[attr_name]
+          if column.nil?
+            if Numeric === value || value !~ /[^0-9]/
+              !value.to_i.zero?
             else
+              return false if ActiveModel::Type::Boolean::FALSE_VALUES.include?(value)
               !value.blank?
             end
+          elsif value.respond_to?(:zero?)
+            !value.zero?
+          else
+            !value.blank?
           end
         end
-
-        if value.symbolic?
-          res = res.with_sym_ast Dse::TranscriptProto::Expression.new(
-            call: Dse::TranscriptProto::Call.new(
-              function: "RAILS_QUERY_ATTRIBUTE",
-              arguments: [value.sym_ast]
-            )
-          )
-        end
-        res
       end
+
+      if value.symbolic?
+        res = res.with_sym_ast Dse::TranscriptProto::Expression.new(
+          call: Dse::TranscriptProto::Call.new(
+            function: "RAILS_QUERY_ATTRIBUTE",
+            arguments: [value.sym_ast]
+          )
+        )
+      end
+      res
     end
   end
-  module Inheritance
-    module ClassMethods
-      private
-        def find_sti_class(type_name)
-          type_name = base_class.type_for_attribute(inheritance_column).cast(type_name)
 
-          descendants.sort_by(&:name).each do |klass| # TODO(zhangwen): is `sort_by` necessary?
-            return klass if klass.name == type_name
-          end
+  module Inheritance::ClassMethods
+    private
+      def find_sti_class(type_name)
+        type_name = base_class.type_for_attribute(inheritance_column).cast(type_name)
 
-          subclass = begin
-            if store_full_sti_class
-              ActiveSupport::Dependencies.constantize(type_name)
-            else
-              compute_type(type_name)
-            end
-          rescue NameError
-            raise SubclassNotFound,
-              "The single-table inheritance mechanism failed to locate the subclass: '#{type_name}'. " \
-              "This error is raised because the column '#{inheritance_column}' is reserved for storing the class in case of inheritance. " \
-              "Please rename this column if you didn't intend it to be used for storing the inheritance class " \
-              "or overwrite #{name}.inheritance_column to use another column for that information."
-          end
-          unless subclass == self || descendants.include?(subclass)
-            raise SubclassNotFound, "Invalid single-table inheritance type: #{subclass.name} is not a subclass of #{name}"
-          end
-          subclass
+        descendants.sort_by(&:name).each do |klass| # TODO(zhangwen): is `sort_by` necessary?
+          return klass if klass.name == type_name
         end
-    end
+
+        subclass = begin
+          if store_full_sti_class
+            ActiveSupport::Dependencies.constantize(type_name)
+          else
+            compute_type(type_name)
+          end
+        rescue NameError
+          raise SubclassNotFound,
+            "The single-table inheritance mechanism failed to locate the subclass: '#{type_name}'. " \
+            "This error is raised because the column '#{inheritance_column}' is reserved for storing the class in case of inheritance. " \
+            "Please rename this column if you didn't intend it to be used for storing the inheritance class " \
+            "or overwrite #{name}.inheritance_column to use another column for that information."
+        end
+        unless subclass == self || descendants.include?(subclass)
+          raise SubclassNotFound, "Invalid single-table inheritance type: #{subclass.name} is not a subclass of #{name}"
+        end
+        subclass
+      end
+  end
+
+  class Associations::Association
+    private
+      def skip_statement_cache?(_scope)
+        true
+      end
   end
 end
 #endregion
