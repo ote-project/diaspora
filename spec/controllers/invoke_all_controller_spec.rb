@@ -96,13 +96,13 @@ class << Time
   end
 end
 
-class << NilClass
+class NilClass
   def blank?
     nil?  # This will record a nil check.
   end
 end
 
-class << String
+class String
   alias_method :orig_blank?, :blank?
   def blank?
     !nil? && orig_blank?  # `!nil?` will record a nil check.
