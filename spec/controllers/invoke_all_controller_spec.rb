@@ -6,7 +6,7 @@ require 'database_cleaner/active_record'
 # ActiveRecord::Base.logger = Logger.new(STDOUT)
 # ActiveRecord::Base.logger.level = Logger::DEBUG
 
-#region Redefinitions of Ruby on Rails methods
+#region Redefinitions of Ruby and Rails methods
 # FIXME(zhangwen): put these somewhere else?
 class ActiveSupport::TimeWithZone
   include Dse::SymbolicEquality
@@ -89,13 +89,26 @@ module ActiveRecord
       end
   end
 end
-#endregion
 
 class << Time
   def now
     Dse::get_input_ts("now")
   end
 end
+
+class << NilClass
+  def blank?
+    nil?  # This will record a nil check.
+  end
+end
+
+class << String
+  alias_method :orig_blank?, :blank?
+  def blank?
+    !nil? && orig_blank?  # `!nil?` will record a nil check.
+  end
+end
+#endregion
 
 describe PostsController, type: :controller do
   include DseHelpers
