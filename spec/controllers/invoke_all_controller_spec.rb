@@ -91,8 +91,10 @@ module ActiveRecord
 end
 
 class << Time
+  alias_method :orig_now, :now
   def now
-    Dse::get_input_ts("now")
+    # Check if an invocation is in progress -- after we're done running, `now` should return its normal value.
+    Dse::is_invocation_in_progress ? Dse::get_input_ts("now") : orig_now
   end
 end
 
