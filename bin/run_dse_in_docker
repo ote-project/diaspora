@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -em
+set -emx
 
 # Move MySQL data to tmpfs, then start MySQL.
 if [ ! -d "/tmpfs" ]; then
@@ -26,9 +26,11 @@ cd "$DIR/.."
 #
 if [ -n "${PORT}" ]; then # In web mode
   export DSE_TUNNEL_PATH="/tmp/invocations.sock"
+  bin/rspec_dse spec/controllers/invoke_all_controller_spec.rb --example "${EXAMPLE_NAME}" &
+else
+  bin/rspec_dse "$@" &
 fi
 
-bin/rspec_dse "$@" &
 while [ ! -e "$DSE_TUNNEL_PATH" ]; do sleep 0.5; done
 
 if [ -n "${PORT}" ]; then # In web mode
