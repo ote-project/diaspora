@@ -23,11 +23,20 @@ done
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR/.."
 # The current directory is the `diaspora` directory.
+#
+if [ -n "${PORT}" ]; then # In web mode
+  export DSE_TUNNEL_PATH="/tmp/invocations.sock"
+fi
 
-bin/rspec_dse $@ &
+bin/rspec_dse "$@" &
 while [ ! -e "$DSE_TUNNEL_PATH" ]; do sleep 0.5; done
-chmod 777 "$DSE_TUNNEL_PATH"
-echo "Set permission on: $DSE_TUNNEL_PATH"
 
-fg
+if [ -n "${PORT}" ]; then # In web mode
+  echo "In web mode"
+  bin/web_to_unix_sock_forwarder "${PORT}" "${DSE_TUNNEL_PATH}"
+else
+  chmod 777 "$DSE_TUNNEL_PATH"
+  echo "Set permission on: $DSE_TUNNEL_PATH"
+  fg
+fi
 
