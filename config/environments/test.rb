@@ -13,6 +13,9 @@ Rails.application.configure do
   # just for the purpose of running a single test. If you are using a tool that
   # preloads Rails for running tests, you may have to set it to true.
   config.eager_load = true  # WZ: Enable eager_load so that STI code knows all descendants.
+  config.eager_load_paths += %W[#{config.root}/lib]
+
+  config.action_controller.perform_caching = true
 
   # Configure public file server for tests with Cache-Control for performance.
   config.public_file_server.enabled = true
@@ -58,7 +61,7 @@ Rails.application.configure do
   # Set the logging destination(s)
   config.log_to = %w[file]
 
-  config.log_level = :debug
+  config.log_level = :info
 
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true

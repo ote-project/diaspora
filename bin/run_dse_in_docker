@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -em
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "$DIR/.."
+# Move MySQL data to tmpfs, then start MySQL.
+if [ ! -d "/tmpfs" ]; then
+  echo "Directory /tmpfs does not exist."
+  exit 1
+fi
+mv /var/lib/mysql /tmpfs/mysql
+ln -s /tmpfs/mysql /var/lib/mysql
 
 mysqld &
 while ! mysqladmin ping --silent; do
@@ -14,6 +19,10 @@ while ! mysqladmin ping --silent; do
   fi
 done
 
+# Now start the application.
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$DIR/.."
+# The current directory is the `diaspora` directory.
 
 bin/rspec_dse $@ &
 while [ ! -e "$DSE_TUNNEL_PATH" ]; do sleep 0.5; done
