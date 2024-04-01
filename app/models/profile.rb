@@ -5,7 +5,7 @@
 #   the COPYRIGHT file.
 
 class Profile < ApplicationRecord
-  if Rails.env.include? "mod"
+  if Rails.env.include?("mod") || Rails.env == "test"
     lazy_load :bio, :gender, :birthday, :location
   end
 
