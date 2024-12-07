@@ -112,65 +112,50 @@ class String
 end
 #endregion
 
-describe PostsController, type: :controller do
-  include DseHelpers
+##
+# Declares a controller action for policy extraction.  See usage examples at the end of this file.
+def declare_handler(controller, *action_spec)
+  action_snippets = action_spec.map do |action_name, params, run_test_options|
+    # Params can be either a hash of concrete parameters, or an array of [param_name, input_name, type]-triples for
+    # symbolic parameters.
+    params_code =
+      case params
+      when Hash
+        params.map { |param_name, value| "#{param_name}: #{value.inspect}" }.join(", ")
+      when Array
+        params.map { |param_name, input_name, type|
+          "#{param_name}: Dse::get_input_#{type}(\"#{input_name}\")"
+        }.join(", ")
+      else
+        raise ArgumentError, "Invalid params: #{params.inspect}"
+      end
 
-  describe "#show" do
-    it "runs" do
-      sym_params = {id: Dse::get_input_int("post_id")}.freeze
-      run_test :show, sym_params
-    end
+    run_test_options_code = run_test_options.map { |k, v| "#{k}: #{v.inspect}" }.join(", ")
+    run_test_options_code = ", #{run_test_options_code}" unless run_test_options_code.empty?
+    <<~RUBY
+      describe "##{action_name}" do
+        it "runs" do
+          sym_params = { #{params_code} }.freeze
+          run_test :#{action_name}, sym_params#{run_test_options_code}
+        end
+      end
+    RUBY
   end
+
+  eval <<~RUBY
+    describe #{controller}, type: :controller do
+      include DseHelpers
+      render_views
+
+      #{action_snippets.join("\n")}
+    end
+  RUBY
 end
 
-describe PeopleController, type: :controller do
-  include DseHelpers
-
-  describe "#show" do
-    it "runs" do
-      sym_params = {id: Dse::get_input_str("person_guid")}.freeze
-      run_test :show, sym_params
-    end
-  end
-
-  describe "#stream" do
-    it "runs" do
-      sym_params = {person_id: Dse::get_input_str("person_guid")}.freeze
-      run_test :stream, sym_params, :format => :json
-    end
-  end
-end
-
-describe CommentsController, type: :controller do
-  include DseHelpers
-
-  describe "#index" do
-    it "runs" do
-      sym_params = {post_id: Dse::get_input_int("post_id")}.freeze
-      run_test :index, sym_params, :format => :json
-    end
-  end
-end
-
-describe ConversationsController, type: :controller do
-  include DseHelpers
-
-  describe "#index" do
-    it "runs" do
-      sym_params = {conversation_id: Dse::get_input_int("conversation_id")}.freeze
-      run_test :index, sym_params
-    end
-  end
-end
-
-describe NotificationsController, type: :controller do
-  include DseHelpers
-
-  describe "#index" do
-    it "runs" do
-      sym_params = {page: 1, per_page: 100}.freeze
-      run_test :index, sym_params
-    end
-  end
-end
-#endregion
+declare_handler PostsController, [:show, [[:id, :post_id, :int]], {}]
+declare_handler PeopleController,
+                [:show, [[:id, :person_guid, :str]], {}],
+                [:stream, [[:person_id, :person_guid, :str]], {format: :json}]
+declare_handler CommentsController, [:index, [[:post_id, :post_id, :int]], {format: :json}]
+declare_handler ConversationsController, [:index, [[:conversation_id, :conversation_id, :int]], {}]
+declare_handler NotificationsController, [:index, {page: 1, per_page: 100}, {}]
