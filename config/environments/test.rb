@@ -68,4 +68,7 @@ Rails.application.configure do
 
   # for fixture_builder
   ENV["FIXTURES_PATH"] = "spec/fixtures"
+
+  # Make sure it doesn't freak out if asset name (loaded from database) is nonexistent.
+  config.assets.unknown_asset_fallback = true
 end
