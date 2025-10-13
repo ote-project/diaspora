@@ -5,7 +5,28 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR/.."
 
 mysqld &
-sleep 2
+# Wait for MySQL to be ready with a timeout instead of a fixed sleep
+timeout=60
+elapsed=0
+while ! mysqladmin ping --silent; do
+  if [ "$elapsed" -ge "$timeout" ]; then
+    echo "Timed out waiting for MySQL to be ready after ${timeout}s" >&2
+    if ls /var/log/mysql/*.log >/dev/null 2>&1; then
+      cat /var/log/mysql/*.log || true
+    fi
+    exit 1
+  fi
+  sleep 1
+  elapsed=$((elapsed+1))
+  if ! pgrep -x "mysqld" > /dev/null; then
+    # mysqld exited unexpectedly; show logs if available and fail
+    if ls /var/log/mysql/*.log >/dev/null 2>&1; then
+      cat /var/log/mysql/*.log || true
+    fi
+    echo "mysqld exited before becoming ready" >&2
+    exit 1
+  fi
+done
 mysql <<EOF
   CREATE DATABASE \`diaspora_test\`;
   CREATE USER 'diaspora'@'localhost' IDENTIFIED BY '12345678';
@@ -14,4 +35,3 @@ mysql <<EOF
 EOF
 
 RAILS_ENV=test bin/bundle exec rake db:migrate
-
