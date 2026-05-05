@@ -6,6 +6,8 @@
 
 class Profile < ApplicationRecord
   if Rails.env.include?("mod") || Rails.env == "test"
+    # **IMPORTANT**: These fields are sensitive; they are retrieved not by default, but only when explicitly accessed.
+    # When a SQL query is issued to load a `Profile` record, by default these fields are **not** fetched or cached in the loaded record.
     lazy_load :bio, :gender, :birthday, :location
   end
 
